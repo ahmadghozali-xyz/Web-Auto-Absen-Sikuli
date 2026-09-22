@@ -107,10 +107,10 @@ UI pakai design system dari [ui-ux-pro-max-skill](https://github.com/nextlevelbu
 | Bagian | Teknologi | Kenapa |
 |---|---|---|
 | Frontend (tampilan) | HTML, CSS, JavaScript murni | Tanpa framework → ringan & cepat |
-| Backend (logika) | Python 3.12 + `requests` + `BeautifulSoup` | Sama seperti versi asli |
+| Backend (API + serve statis) | Python 3.12 + Flask | Pola "Zero-config Flask" yang Vercel dukung penuh |
+| HTTP client & parsing | `requests` + `BeautifulSoup` | Sama seperti versi CLI asli |
 | Keamanan sesi | `cryptography` (Fernet encryption) | Cookie sesi dienkripsi, tidak bisa dibaca orang lain |
-| Hosting | Vercel (serverless) | Gratis, otomatis, dapat HTTPS |
-| Dev lokal | Flask | Untuk preview sebelum deploy |
+| Hosting | Vercel (serverless Python runtime) | Gratis, otomatis, dapat HTTPS |
 
 ---
 
@@ -118,20 +118,19 @@ UI pakai design system dari [ui-ux-pro-max-skill](https://github.com/nextlevelbu
 
 ```
 auto-absen-sikuli-web/
-├── api/                    # Fungsi serverless (dijalankan Vercel)
-│   ├── login.py            #   POST: login ke Sikuli + set cookie
-│   ├── check.py            #   POST: cek & isi absen (1 siklus)
-│   └── logout.py           #   POST: hapus sesi
-├── lib/                    # Logika inti (dipakai backend)
-│   ├── sikuli.py           #   login, ambil jadwal, absen (adaptasi absen.py)
-│   └── http_utils.py       #   helper: cookie, enkripsi, JSON
+├── app.py                  # Flask app (entrypoint Vercel: variabel `app`)
+│                           #   Route API: /api/login, /api/check, /api/logout
+│                           #   Serve statis: public/index.html, /style.css, /script.js
+├── lib/                    # Logika inti bot (dipakai app.py)
+│   └── sikuli.py           #   login, ambil jadwal, absen (adaptasi absen.py)
 ├── public/                 # File statis (dilihat browser)
 │   ├── index.html          #   struktur halaman
 │   ├── style.css           #   tampilan (dark OLED)
 │   └── script.js           #   logika polling & tampilan
-├── dev_server.py           # Server lokal (Flask) untuk preview
-├── requirements.txt        # Daftar dependency Python
-├── vercel.json             # Konfigurasi deploy Vercel
+├── pyproject.toml          # Pin entrypoint Vercel: tool.vercel.entrypoint = "app:app"
+├── requirements.txt        # Dependency Python (flask, requests, beautifulsoup4, cryptography)
+├── vercel.json             # Konfigurasi deploy Vercel (maxDuration, cleanUrls)
+├── .python-version         # Pin versi Python 3.12 (default Vercel)
 └── README.md               # File ini
 ```
 
@@ -164,14 +163,14 @@ Butuh sedikit keberanian, tapi tidak serumit kelihatannya.
 
 ```bash
 # 1. Download kodenya
-git clone https://github.com/USERNAME-KAMU/auto-absen-sikuli-web.git
-cd auto-absen-sikuli-web
+git clone https://github.com/USERNAME-KAMU/Web-Auto-Absen-Sikuli.git
+cd Web-Auto-Absen-Sikuli
 
 # 2. Install dependency Python (Flask, requests, dll)
 pip install -r requirements.txt
 
-# 3. Jalankan server lokal
-python dev_server.py
+# 3. Jalankan server lokal (Flask dev server)
+python app.py
 
 # 4. Buka browser ke:
 #    http://localhost:5000
@@ -193,7 +192,7 @@ Ini langkah untuk **publish ke internet** biar bisa diakses dari HP mana saja.
 ### Langkah
 
 1. Login ke [vercel.com](https://vercel.com) → klik **Add New → Project**.
-2. Pilih repo `auto-absen-sikuli-web` dari daftar.
+2. Pilih repo `Web-Auto-Absen-Sikuli` dari daftar.
 3. Di bagian **Environment Variables**, tambah satu variabel:
 
    | Name | Value |
@@ -203,10 +202,13 @@ Ini langkah untuk **publish ke internet** biar bisa diakses dari HP mana saja.
    Buat kode rahasia: buka Terminal, jalankan `openssl rand -hex 32`, copy hasilnya, paste ke Value.
 
 4. Klik **Deploy**. Tunggu ±1 menit.
-5. Selesai! Dapat URL seperti `https://auto-absen-sikuli-web.vercel.app`.
+5. Selesai! Dapat URL seperti `https://web-auto-absen-sikuli.vercel.app`.
 
 > [!TIP]
 > `SESSION_SECRET` dipakai untuk **mengenkripsi cookie sesi kamu**. Tanpa ini, app tetap jalan pakai key default, tapi **sangat disarankan set** supaya aman.
+
+> [!NOTE]
+> **Kenapa Flask, bukan file-based `/api/*.py`?** Versi awal project ini pakai folder `/api/` dengan handler `BaseHTTPRequestHandler` (pola lama Vercel). Tapi sejak 2024, Vercel default-nya pakai **Python framework preset** (Flask/FastAPI via `app.py` + `pyproject.toml`). Pola `/api/` sekarang hanya untuk proyek lama. Oleh karena itu project ini disederhanakan jadi **satu Flask app** di `app.py` — lebih bersih, lebih cepat, dan langsung kedeteksi Vercel tanpa konfigurasi tambahan.
 
 ---
 
