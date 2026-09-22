@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Environment / secrets
+.env
+.env.local
+*.env
+SESSION_SECRET
+
+# Vercel
+.vercel/
+
+# Editor / OS
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*~
+
+# CodeBuddy sandbox
+.codebuddy/
+.cloudstudio
+*.zip
