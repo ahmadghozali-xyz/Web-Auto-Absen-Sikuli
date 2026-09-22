@@ -20,6 +20,10 @@ Dari yang dulu jalan di Terminal → sekarang cukup buka di browser, klik tombol
 
 Versi aslinya (dari [repo ini](https://github.com/ahmadghozali-xyz/auto-absen-sikuli)) berjalan di **Terminal / Command Prompt** — harus install Python, ketik perintah, dan kalau ditutup bot-nya berhenti. Ribet buat yang belum biasa.
 
+https://web-auto-absen-sikuli-mtxf.vercel.app/ 
+
+backup : https://a5e7b58e4aabc63bb.sg.agentos-app.run/
+
 **Web Edition** ini mengubahnya jadi **aplikasi web**:
 
 | Dulu (CLI) | Sekarang (Web) |
