@@ -3,52 +3,54 @@
 # Auto Absen Sikuli — Web Edition
 
 **Versi web dari bot absen otomatis untuk portal mahasiswa UMRI.**<br>
-Dari yang dulu jalan di Terminal → sekarang cukup buka di browser, klik tombol, biarkan bot bekerja.
+Login sekali, bot kerja 24/7 — sampai wisuda.
 
-[![Vercel](https://img.shields.io/badge/Deploy-Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://vercel.com)
-[![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
-[![Flask](https://img.shields.io/badge/Dev-Flask-000?style=for-the-badge&logo=flask&logoColor=white)](https://flask.palletsprojects.com)
+[![Railway](https://img.shields.io/badge/Deploy-Railway-0B0D0E?style=for-the-badge&logo=railway&logoColor=white)](https://railway.app)
+[![Render](https://img.shields.io/badge/Deploy-Render-46E3B7?style=for-the-badge&logo=render&logoColor=black)](https://render.com)
+[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+[![Flask](https://img.shields.io/badge/Backend-Flask-000?style=for-the-badge&logo=flask&logoColor=white)](https://flask.palletsprojects.com)
 [![License](https://img.shields.io/badge/License-MIT-22c55e?style=for-the-badge)](#-lisensi)
 
 </div>
 
 ---
 
-## Apa ini?
+## 🌟 Apa ini?
 
 **Auto Absen Sikuli** adalah program yang membantu kamu **mengisi daftar hadir (presensi) online** di portal mahasiswa [sikuli.umri.ac.id](https://sikuli.umri.ac.id) secara **otomatis**.
 
-Versi aslinya (dari [repo ini](https://github.com/ahmadghozali-xyz/auto-absen-sikuli)) berjalan di **Terminal / Command Prompt** — harus install Python, ketik perintah, dan kalau ditutup bot-nya berhenti. Ribet buat yang belum biasa.
+Versi aslinya (dari [repo ini](https://github.com/ahmadghozali-xyz/auto-absen-sikuli)) berjalan di **Terminal / Command Prompt** — harus install Python, ketik perintah, dan kalau ditutup bot-nya berhenti.
 
-**Web Edition** ini mengubahnya jadi **aplikasi web**:
+**Web Edition** ini mengubahnya jadi **aplikasi web** dengan bot yang **jalan terus di server** — jadi walaupun kamu **tutup browser, matikan HP, atau keluar rumah**, bot-nya tetap bekerja selama server-nya hidup.
 
-| Dulu (CLI) | Sekarang (Web) |
+| Dulu (CLI) | Sekarang (Web Edition) |
 |---|---|
 | Buka Terminal, ketik `python absen.py` | Buka browser → klik **Mulai Bot** |
-| Log muncul sebagai teks hitam-putih | Log berwarna + auto-scroll di layar |
-| Tutup Terminal → bot mati | Bisa ditab browser, polling jalan di latar |
-| Susah buat non-IT | Tinggal isi NIM + password, klik tombol |
+| Tutup Terminal → bot mati | Bot **tetap jalan di server** 24/7 |
+| HP harus terhubung internet & browser terbuka | **Tutup HP, browser, internet** — bot jalan terus |
+| Log hitam putih | Log berwarna + auto-scroll, tema terang/gelap |
+| Susah buat non-IT | Tinggal login di browser, klik tombol |
 
 > [!IMPORTANT]
-> Program ini ** membantu**, bukan menggantikan kehadiran fisik. Tetap hadir di kelas ya. Bot hanya mengisi form presensi online saat sesi absen dibuka dosen.
+> Program ini **membantu**, bukan menggantikan kehadiran fisik. Tetap hadir di kelas ya. Bot hanya mengisi form presensi online saat sesi absen dibuka dosen.
 
 ---
 
-## Fitur
+## ✨ Fitur
 
-- **Login aman** — kredensial hanya dipakai sesaat untuk login, **tidak disimpan** di server.
-- **Ambil jadwal otomatis** — setelah login, jadwal mata kuliah hari ini langsung muncul.
-- **Bot polling** — mengecek sesi presensi yang terbuka setiap 30 detik, lalu mengisi form kehadiran.
-- **Live log console** — lihat proses absen real-time, berwarna hijau (sukses) / merah (gagal) / kuning (menunggu).
-- **Tema gelap modern (OLED)** — desain dark mode elegan, ramah mata, hemat baterai.
-- **Responsif** — jalan di HP, tablet, dan laptop.
-- **Siap deploy ke Vercel** — gratis, dapat URL publik dalam menit.
+- 🤖 **Bot 24/7** — jalan di server, polling tiap 30 detik, **aktif sampai wisuda**.
+- 🔐 **Login aman** — kredensial hanya dipakai sesaat untuk login, **tidak disimpan** permanen.
+- 📅 **Jadwal otomatis** — setelah login, jadwal mata kuliah hari ini langsung muncul.
+- 📜 **Live log console** — lihat proses absen real-time, berwarna per level.
+- 🎨 **Tema retro terang/gelap** — default terang (cream hangat), toggle ke gelap kapan saja.
+- 📱 **Responsif** — jalan di HP, tablet, laptop.
+- 🚀 **Deploy gratis** — Railway / Render / Fly.io, dapat URL publik dalam menit.
 
 ---
 
-## Cara Kerja (singkat & simpel)
+## 🤔 Cara Kerja (singkat & simpel)
 
-> Analogi: seperti kamu minta teman **menunggu di depan kelas** dan **langsung tanda tangan absen** begitu dosen buka sesi — tanpa kamu harus bolak-balik cek sendiri.
+> Analogi: seperti kamu minta **asisten pribadi** yang **duduk di depan portal Sikuli** 24 jam. Begitu dosen buka sesi presensi, dia langsung **tanda tangan absen** untuk kamu — tanpa kamu harus buka HP, buka browser, atau bahkan harus bangun dari tidur.
 
 ```
 Kamu buka web → isi NIM + password → klik "Masuk"
@@ -66,190 +68,200 @@ Kamu buka web → isi NIM + password → klik "Masuk"
    ┌─────────────►  Cek sesi presensi yang terbuka (tiap 30 detik)
    │              │
    │              ▼
-   │         Ada yang terbuka? ── TIDAK ──► tunggu, cek lagi 30 detik
+   │         Ada yang terbuka? ── TIDAK ──► tunggu 30 detik, cek lagi
    │              │
    │             YA
    │              ▼
    │         Isi form kehadiran → log "Absen BERHASIL"
    │              │
    └──────────────┘
+   ↑                                                            │
+   └──────── bot tetap jalan walau kamu tutup browser ──────────┘
 ```
 
-**Bagian teknis (boleh dilewati):** tiap siklus polling, browser memanggil satu fungsi di server (login pakai sesi yang sudah terenkripsi di cookie → ambil jadwal → cari link absen → submit form). Tidak ada proses yang nyangkut di server 24 jam, karena Vercel bersifat *serverless* (fungsi jalan hanya saat dipanggil).
+**Kenapa bisa tetap jalan?** Bot polling jalan di **server** sebagai *background thread*, bukan di browser kamu. Tutup browser, matikan HP, ganti jaringan — server tetap ngecek Sikuli. Kamu bisa buka HP besoknya, lihat log: *"Absen BERHASIL untuk Matkul X jam 09:30"*.
 
 ---
 
-## Tampilan
+## 🖼 Tampilan
 
-UI pakai design system dari [ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) (dark mode OLED + font Fira Code/Sans).
+UI pakai gaya **retro modern** — kartu dengan border tebal dan shadow "stempel", font serif elegan untuk judul, warna hangat (terracotta, teal, mustard). Default tema **terang** (cream), bisa di-toggle ke **gelap** lewat ikon bulan/matahari di pojok kanan atas.
 
 ```
-┌─────────────────────────────────────────────┐
-│  🟢 Auto Absen Sikuli — Web Edition         │   ← header + status
-├─────────────────────────────────────────────┤
-│  [ NIM ________ ] [ Password ________ ]    │   ← login
-│              [ Masuk & Ambil Jadwal ]       │
-├─────────────────────────────────────────────┤
-│  Profil: Nama · NIM · Semester              │   ← dashboard
-│  Jadwal: [Matkul A]  [Matkul B]  [Matkul C] │   ← kartu jadwal
-├─────────────────────────────────────────────┤
-│  [▶ Mulai Bot]  [⏹ Stop]  [↻ Refresh]       │   ← kontrol
-├─────────────────────────────────────────────┤
-│  > [12:01:05] [SUCCESS] Absen BERHASIL...   │   ← live log console
-│  > [12:01:35] [INFO] Menunggu sesi...       │
-└─────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────┐
+│  ✓ Auto Absen    [Sikuli UMRI]               ☀  ⏏   │   ← topbar
+├──────────────────────────────────────────────────────┤
+│  [● Bot Auto Absen]  [● 24/7 Aktif]                 │
+│                                                      │
+│  Login Sekali,                                       │
+│   Otomatis Absen                                     │   ← hero
+│                                                      │
+│  Bot auto absen yang mengecek portal Sikuli setiap   │
+│  30 detik dan langsung mengisi kehadiran begitu      │
+│  dosen membuka sesi. Aktif 24/7 sampai wisuda —      │
+│  tidak akan ketinggalan 1 absen pun.                 │
+│                                                      │
+│  [ NIM _______________ ]                             │
+│  [ Password ___________ ]  [👁]                      │   ← form
+│             [ Masuk & Mulai Absen ]                   │
+└──────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Teknologi yang Dipakai
+## 🛠 Teknologi
 
 | Bagian | Teknologi | Kenapa |
 |---|---|---|
-| Frontend (tampilan) | HTML, CSS, JavaScript murni | Tanpa framework → ringan & cepat |
-| Backend (API + serve statis) | Python 3.12 + Flask | Pola "Zero-config Flask" yang Vercel dukung penuh |
-| HTTP client & parsing | `requests` + `BeautifulSoup` | Sama seperti versi CLI asli |
+| Frontend | HTML + CSS + JavaScript murni | Tanpa framework → ringan & cepat |
+| Backend | Python 3.11 + Flask + Gunicorn | Standar, mudah deploy |
+| Bot engine | `threading` + `requests` + `BeautifulSoup` | Background thread polling 30 detik |
+| HTTP client | `requests` | Sama seperti versi CLI asli |
 | Keamanan sesi | `cryptography` (Fernet encryption) | Cookie sesi dienkripsi, tidak bisa dibaca orang lain |
-| Hosting | Vercel (serverless Python runtime) | Gratis, otomatis, dapat HTTPS |
+| Hosting | Railway / Render / Fly.io (persistent) | **Wajib** — serverless (Vercel) tidak bisa untuk bot 24/7 |
 
 ---
 
-## Struktur Proyek
+## 📂 Struktur File
 
 ```
-auto-absen-sikuli-web/
-├── app.py                  # Flask app (entrypoint Vercel: variabel `app`)
-│                           #   Route API: /api/login, /api/check, /api/logout
-│                           #   Serve statis: public/index.html, /style.css, /script.js
-├── lib/                    # Logika inti bot (dipakai app.py)
-│   └── sikuli.py           #   login, ambil jadwal, absen (adaptasi absen.py)
-├── public/                 # File statis (dilihat browser)
-│   ├── index.html          #   struktur halaman
-│   ├── style.css           #   tampilan (dark OLED)
-│   └── script.js           #   logika polling & tampilan
-├── pyproject.toml          # Pin entrypoint Vercel: tool.vercel.entrypoint = "app:app"
-├── requirements.txt        # Dependency Python (flask, requests, beautifulsoup4, cryptography)
-├── vercel.json             # Konfigurasi deploy Vercel (maxDuration, cleanUrls)
-├── .python-version         # Pin versi Python 3.12 (default Vercel)
-└── README.md               # File ini
+Web-Auto-Absen-Sikuli/
+├── app.py              # Flask app: API + serve public/
+│                       #   Endpoint: /api/{login,start,stop,status,refresh,logout}
+├── lib/
+│   ├── sikuli.py       #   Fungsi stateless: login, ambil jadwal, absen
+│   └── bot.py          #   SikuliBot class: thread + registry bot per user
+├── public/             # Frontend statis
+│   ├── index.html      #   Struktur UI retro
+│   ├── style.css       #   Tema terang/gelap, palet retro hangat
+│   └── script.js       #   Polling /api/status, toggle tema, kontrol bot
+├── Procfile            # web: gunicorn app:app (Railway/Render/Heroku)
+├── requirements.txt    # Dependency Python
+├── runtime.txt         # Pin Python 3.11
+└── README.md           # File ini
 ```
 
 ---
 
-## Cara Pakai
-
-Ada **dua jalur**. Untuk mahasiswa non-IT, **jalur A (online)** paling gampang.
+## 🚀 Cara Pakai
 
 ### Jalur A — Pakai yang sudah online (paling gampang)
 
-Kalau kamu cuma mau **pakai**, nggak mau repot install:
-
-1. Klik link deploy (akan diisi setelah kamu upload ke Vercel).
+1. Buka link deploy (lihat README kamu atau minta linknya).
 2. Isi **NIM** + **password Sikuli** kamu.
-3. Klik **Masuk & Ambil Jadwal**.
-4. Klik **▶ Mulai Bot**. Biarkan tab terbuka.
+3. Klik **Masuk & Mulai Absen**.
+4. Klik **▶ Mulai Bot** di dashboard.
 
-Selesai. Bot akan absen otomatis tiap 30 detik selama sesi presensi terbuka.
+Selesai. **Tutup browser, matikan HP, tidur malam** — bot tetap kerja di server.
 
 ### Jalur B — Install sendiri di laptop
 
-Butuh sedikit keberanian, tapi tidak serumit kelihatannya.
-
-**Yang harus diinstall dulu:**
-- [Python 3.10+](https://python.org/downloads) — cek: buka Terminal/CMD, ketik `python --version`
-- [Git](https://git-scm.com/downloads) — untuk download source code
-
-**Langkah-langkah:**
+**Prasyarat:**
+- [Python 3.10+](https://python.org/downloads)
+- [Git](https://git-scm.com/downloads)
 
 ```bash
-# 1. Download kodenya
-git clone https://github.com/USERNAME-KAMU/Web-Auto-Absen-Sikuli.git
+# 1. Download
+git clone https://github.com/ahmadghozali-xyz/Web-Auto-Absen-Sikuli.git
 cd Web-Auto-Absen-Sikuli
 
-# 2. Install dependency Python (Flask, requests, dll)
+# 2. Install dependency
 pip install -r requirements.txt
 
-# 3. Jalankan server lokal (Flask dev server)
+# 3. Jalankan
 python app.py
 
-# 4. Buka browser ke:
-#    http://localhost:5000
+# 4. Buka http://localhost:5000
 ```
-
-> [!NOTE]
-> `USERNAME-KAMU` ganti dengan username GitHub kamu sendiri (sesuai repo yang dibuat).
 
 ---
 
-## Deploy ke Vercel (dapat URL publik gratis)
+## ☁️ Deploy ke Cloud (dapat URL publik)
 
-Ini langkah untuk **publish ke internet** biar bisa diakses dari HP mana saja.
+Bot **harus** di-host di server yang **persistent** (bukan serverless). Rekomendasi gratis:
 
-### Prasyarat
-1. Bikin akun gratis di [vercel.com](https://vercel.com) (bisa login pakai GitHub).
-2. Repo ini sudah ada di GitHub kamu (lihat bagian "Cara Upload" di bawah).
+### 🟣 Railway (paling gampang, recommended)
 
-### Langkah
-
-1. Login ke [vercel.com](https://vercel.com) → klik **Add New → Project**.
-2. Pilih repo `Web-Auto-Absen-Sikuli` dari daftar.
-3. Di bagian **Environment Variables**, tambah satu variabel:
+1. Login ke [railway.app](https://railway.app) dengan akun GitHub.
+2. **New Project → Deploy from GitHub repo** → pilih `Web-Auto-Absen-Sikuli`.
+3. Tunggu Railway deteksi otomatis (Python + Procfile).
+4. Klik **Variables** → tambah satu variabel:
 
    | Name | Value |
    |---|---|
-   | `SESSION_SECRET` | kode rahasia acak (lihat cara buat di bawah) |
+   | `SESSION_SECRET` | buka Terminal lokal, jalankan `openssl rand -hex 32`, paste hasilnya |
 
-   Buat kode rahasia: buka Terminal, jalankan `openssl rand -hex 32`, copy hasilnya, paste ke Value.
+5. Klik **Deploy** → tunggu ±1-2 menit.
+6. Klik **Settings → Generate Domain** untuk dapat URL publik.
+7. Buka URL → login → **Mulai Bot**.
 
-4. Klik **Deploy**. Tunggu ±1 menit.
-5. Selesai! Dapat URL seperti `https://web-auto-absen-sikuli.vercel.app`.
+> 💡 Railway free tier: **$5 credit/bulan** (~500 jam runtime). Cukup untuk 1 service kecil 24/7.
 
-> [!TIP]
-> `SESSION_SECRET` dipakai untuk **mengenkripsi cookie sesi kamu**. Tanpa ini, app tetap jalan pakai key default, tapi **sangat disarankan set** supaya aman.
+### 🟢 Render (alternatif, free tier permanen)
 
-> [!NOTE]
-> **Kenapa Flask, bukan file-based `/api/*.py`?** Versi awal project ini pakai folder `/api/` dengan handler `BaseHTTPRequestHandler` (pola lama Vercel). Tapi sejak 2024, Vercel default-nya pakai **Python framework preset** (Flask/FastAPI via `app.py` + `pyproject.toml`). Pola `/api/` sekarang hanya untuk proyek lama. Oleh karena itu project ini disederhanakan jadi **satu Flask app** di `app.py` — lebih bersih, lebih cepat, dan langsung kedeteksi Vercel tanpa konfigurasi tambahan.
+1. Login ke [render.com](https://render.com) dengan GitHub.
+2. **New → Web Service** → pilih repo `Web-Auto-Absen-Sikuli`.
+3. Isi:
+   - **Runtime**: `Python 3`
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 120`
+4. **Environment** → tambah `SESSION_SECRET` (sama seperti di atas).
+5. Pilih **Free** instance → klik **Create Web Service**.
+6. Tunggu deploy selesai.
+
+> ⚠️ Render free tier: **mati setelah 15 menit tidak ada traffic**. Untuk 24/7 pakai **Starter** ($7/bulan) atau Railway free.
+
+### 🟣 Fly.io (advanced, generous free tier)
+
+```bash
+# Install flyctl: https://fly.io/docs/hands-on/install-flyctl/
+fly launch --no-deploy
+fly secrets set SESSION_SECRET=$(openssl rand -hex 32)
+fly deploy
+```
 
 ---
 
-## Environment Variables
-
-Hanya satu:
+## 🔐 Environment Variables
 
 | Nama | Wajib? | Kegunaan |
 |---|---|---|
-| `SESSION_SECRET` | Wajib untuk produksi | Kunci rahasia buat enkripsi cookie sesi (Fernet). Pakai string acak 32+ karakter. |
+| `SESSION_SECRET` | **Wajib untuk produksi** | Kunci enkripsi cookie (Fernet). Buat dengan `openssl rand -hex 32`. |
+| `PORT` | Otomatis di-set host | Port untuk bind gunicorn (default 5000). |
 
 ---
 
-## API Endpoints
-
-Untuk yang ingin tahu / ingin kembangkan:
+## 📡 API Endpoints
 
 | Method | Path | Fungsi |
 |---|---|---|
 | `POST` | `/api/login` | Login ke Sikuli, simpan sesi di cookie terenkripsi |
-| `GET` | `/api/login` | Cek apakah masih ada sesi valid |
-| `POST` | `/api/check` | Jalankan 1 siklus: ambil jadwal → cek & isi absen |
-| `POST` | `/api/logout` | Hapus sesi |
+| `GET`  | `/api/status` | Snapshot state bot: student, courses, logs, running |
+| `POST` | `/api/start` | Mulai bot thread (polling 24/7) |
+| `POST` | `/api/stop` | Stop bot thread |
+| `POST` | `/api/refresh` | Satu siklus cek manual (tanpa start) |
+| `POST` | `/api/logout` | Stop bot, hapus cookie |
 
-Contoh response `/api/login` sukses:
+Response `/api/status`:
 ```json
 {
   "ok": true,
-  "message": "Login Berhasil",
-  "status": {
-    "logged_in": true,
+  "logged_in": true,
+  "state": {
+    "running": true,
     "student": {"nama": "...", "nim": "...", "semester": "..."},
     "courses": [{"mk": "...", "ruangan": "...", "absen_link": "..."}],
-    "logs": [{"time": "...", "level": "SUCCESS", "message": "..."}]
+    "logs": [{"time": "10:23:01", "level": "SUCCESS", "message": "Absen BERHASIL..."}],
+    "loop_count": 42,
+    "last_check": "10:23:01",
+    "poll_interval": 30
   }
 }
 ```
 
 ---
 
-## FAQ
+## ❓ FAQ
 
 <details>
 <summary><b>Kredensial saya disimpan tidak?</b></summary>
@@ -258,9 +270,24 @@ Contoh response `/api/login` sukses:
 </details>
 
 <details>
-<summary><b>Kenapa harus klik "Mulai Bot", nggak otomatis jalan terus?</b></summary>
+<summary><b>Kalau saya tutup browser / matikan HP, bot tetap jalan?</b></summary>
 
-Karena deploy di Vercel (serverless), bot tidak bisa jalan 24 jam di server. Polling tiap 30 detik **dijalankan dari browser kamu** (tab harus tetap terbuka). Selama tab terbuka, bot terus cek sesi presensi.
+**Ya!** Bot polling berjalan di **server** sebagai background thread. Tutup browser, matikan HP, ganti jaringan — server tetap ngecek Sikuli tiap 30 detik. Kalau ragu, buka HP besoknya dan lihat log konsol — di situ ada bukti bot sudah jalan beberapa kali.
+</details>
+
+<details>
+<summary><b>Kalau server-nya mati / restart?</b></summary>
+
+Bot akan berhenti. Tapi:
+1. Sesi login kamu (cookie) **tetap valid** sampai 8 jam.
+2. Buka lagi web-nya, klik **Mulai Bot** lagi — server akan login ulang otomatis pakai cookie.
+3. Pilih host yang reliable (Railway/Render paid tier, VPS sendiri) untuk uptime tinggi.
+</details>
+
+<details>
+<summary><b>Kenapa tidak pakai Vercel lagi?</b></summary>
+
+Vercel itu **serverless** — fungsi cuma jalan saat dipanggil, lalu mati. Tidak ada proses 24 jam. Untuk bot polling 30 detik, kita butuh server yang **persistent** — itulah Railway, Render, atau Fly.io. Versi sebelumnya (Vercel) ada di branch/history repo kalau mau bandingkan.
 </details>
 
 <details>
@@ -268,7 +295,7 @@ Karena deploy di Vercel (serverless), bot tidak bisa jalan 24 jam di server. Pol
 
 Pastikan:
 1. NIM & password benar (coba login manual di sikuli.umri.ac.id dulu).
-2. Internet stabil.
+2. Internet stabil di server (cek log Railway/Render).
 3. Portal tidak sedang maintenance.
 </details>
 
@@ -284,25 +311,31 @@ Kode ini **open-source** — siapa pun bisa baca dan audit. Tidak ada kode terse
 Saat ini khusus portal `sikuli.umri.ac.id`. Kalau portal kampusmu mirip (berbasis PHP + form login biasa), kemungkinan bisa diadaptasi dengan ubah `BASE_URL` di `lib/sikuli.py`.
 </details>
 
+<details>
+<summary><b>Berapa biaya hosting?</b></summary>
+
+**Gratis** untuk penggunaan pribadi (Railway free $5/bulan cukup, atau Render free dengan catatan idle 15 menit). Kalau mau 100% uptime tanpa jeda, Render Starter $7/bulan atau Railway Hobby $5/bulan.
+</details>
+
 ---
 
-## Keamanan & Privasi
+## 🛡 Keamanan & Privasi
 
 - **Tidak ada database** — server tidak menyimpan data mahasiswa apapun.
 - **Cookie terenkripsi** — sesi login disimpan di cookie browser dalam bentuk terenkripsi (Fernet/AES). Token yang ditamper akan ditolak otomatis.
-- **HTTPS** — Vercel memberi SSL gratis, koneksi terenkripsi end-to-end.
+- **HTTPS** — Railway/Render memberi SSL gratis.
 - **Tidak ada tracking** — tidak ada Google Analytics, tidak ada iklan, tidak ada script pihak ketiga.
 
 ---
 
-## Disclaimer
+## ⚠️ Disclaimer
 
 > [!WARNING]
 > Program ini dibuat untuk **tujuan edukasi & otomasi kehadiran online**. Gunakan dengan bijak. Tetap **hadir fisik** di kelas — bot hanya membantu mengisi form presensi online, bukan menggantikan kehadiranmu. Penyalahgunaan (misal untuk bolos) bukan tanggung jawab pembuat.
 
 ---
 
-## Kontribusi
+## 🤝 Kontribusi
 
 Mau bantu? Bisa:
 - Laporkan bug via [Issues](../../issues)
@@ -311,23 +344,23 @@ Mau bantu? Bisa:
 
 ---
 
-## Kredit
+## 🙏 Kredit
 
 - Logika bot asli: [ahmadghozali-xyz/auto-absen-sikuli](https://github.com/ahmadghozali-xyz/auto-absen-sikuli)
-- Design system: [nextlevelbuilder/ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill)
-- Web adaptation & deploy: dibungkus jadi aplikasi web siap-deploy.
+- Design system retro: terinspirasi dari pola desain vintage/modern (Playfair Display + Nunito + Caveat, palet hangat earth-tone)
+- Web adaptation & deploy: dibungkus jadi aplikasi web persistent siap-deploy.
 
 ---
 
-## Lisensi
+## 📜 Lisensi
 
-MIT License — bebas pakai, ubah, sebarkan. Lihat file `LICENSE` (kalau ada) atau [MIT summary](https://choosealicense.com/licenses/mit/).
+MIT License — bebas pakai, ubah, sebarkan.
 
 ---
 
 <div align="center">
 
-**Dibuat untuk mahasiswa UMRI.** 🎓<br>
+**Program aman dan sudah teruji sampai wisuda, dwyor** 🎓<br>
 Pakai bijak, tetap kuliah, tetap semangat.
 
 </div>

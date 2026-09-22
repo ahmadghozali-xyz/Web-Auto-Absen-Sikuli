@@ -1,26 +1,23 @@
 """
-lib/sikuli.py — Logika inti bot absen Sikuli (stateless).
+lib/sikuli.py — Logika inti bot absen Sikuli UMRI.
 
-Berisi fungsi-fungsi yang dipakai oleh:
-  - api/login.py, api/check.py, api/logout.py  (Vercel serverless)
-  - dev_server.py                              (preview lokal)
-
-Adaptasi dari absen.py (ahmadghozali-xyz/auto-absen-sikuli) tapi stateless:
-tidak ada thread/loop/penyimpanan memori. Setiap pemanggilan fungsi membuat
-requests.Session baru (atau memuat dari cookie terenkripsi), melakukan SATU
-siklus, lalu mengembalikan hasil.
+Adaptasi dari absen.py (ahmadghozali-xyz/auto-absen-sikuli).
+Berisi fungsi-fungsi stateless untuk dipakai oleh:
+  - lib/bot.py  (thread yang menjalankan polling loop)
+  - app.py      (Flask routes)
 """
 
 import re
 import datetime
 import json
 import base64
+import hashlib
 
 import requests
 from bs4 import BeautifulSoup
 
 try:
-    from cryptography.fernet import Fernet
+    from cryptography.fernet import Fernet, InvalidToken
     _HAS_CRYPTO = True
 except Exception:
     _HAS_CRYPTO = False
@@ -41,51 +38,72 @@ DEFAULT_HEADERS = {
 # --------------------------------------------------------------------------- #
 # SESSION BUILD / SERIALIZE
 # --------------------------------------------------------------------------- #
-def new_session(extra_cookies=None, timeout=10):
-    """Buat requests.Session baru dengan header default + (opsional) cookie."""
+def new_session(timeout=10):
+    """Buat requests.Session baru dengan header default."""
     s = requests.Session()
     s.headers.update(DEFAULT_HEADERS)
-    if extra_cookies:
-        for k, v in extra_cookies.items():
-            s.cookies.set(k, v)
     return s
 
 
 def _fernet(secret):
     """Buat Fernet dari secret string (panjang bebas -> di-hash jadi 32 byte)."""
-    import hashlib
     key = base64.urlsafe_b64encode(hashlib.sha256(secret.encode()).digest())
     return Fernet(key)
 
 
-def encrypt_session(session, secret):
-    """Serialisasi cookies dari requests.Session jadi token terenkripsi."""
+# --------------------------------------------------------------------------- #
+# COOKIE ENCRYPTION (multi-field: sid, nim, cookies)
+# --------------------------------------------------------------------------- #
+def encrypt_payload(sid: str, nim: str, session: requests.Session, secret: str) -> str:
+    """Serialisasi {sid, nim, cookies} jadi token terenkripsi untuk cookie HttpOnly."""
+    payload = {
+        "s": sid,
+        "n": nim,
+        "c": dict(session.cookies),
+    }
     if not _HAS_CRYPTO:
-        # Fallback: base64 saja (TIDAK aman, hanya untuk dev lokal)
-        raw = json.dumps(session.cookies.get_dict()).encode()
+        # Fallback dev (TIDAK aman)
+        raw = json.dumps(payload).encode()
         return base64.urlsafe_b64encode(raw).decode()
     f = _fernet(secret)
-    payload = {"c": session.cookies.get_dict(), "h": dict(session.headers)}
     return f.encrypt(json.dumps(payload).encode()).decode()
 
 
-def decrypt_session(token, secret, timeout=10):
-    """Balik token terenkripsi jadi requests.Session."""
+def decrypt_payload(token: str, secret: str) -> dict | None:
+    """Balik token cookie jadi {sid, nim, cookies} atau None kalau invalid/expired."""
     if not token:
         return None
     try:
         if not _HAS_CRYPTO:
             raw = base64.urlsafe_b64decode(token.encode())
-            cookies = json.loads(raw)
-            return new_session(extra_cookies=cookies, timeout=timeout)
-        f = _fernet(secret)
-        payload = json.loads(f.decrypt(token.encode()).decode())
-        s = new_session(timeout=timeout)
-        for k, v in (payload.get("c") or {}).items():
-            s.cookies.set(k, v)
-        return s
-    except Exception:
+            data = json.loads(raw)
+        else:
+            f = _fernet(secret)
+            data = json.loads(f.decrypt(token.encode()).decode())
+        # Sanitasi: minimal punya field 's' dan 'c'
+        if not isinstance(data, dict) or "s" not in data or "c" not in data:
+            return None
+        return data
+    except (InvalidToken, ValueError, Exception):
         return None
+
+
+def session_from_payload(payload: dict, timeout=10) -> requests.Session:
+    """Rekonstruksi requests.Session dari payload hasil decrypt_payload."""
+    s = new_session(timeout=timeout)
+    for k, v in (payload.get("c") or {}).items():
+        s.cookies.set(k, v)
+    return s
+
+
+def refresh_cookie_token(token: str, secret: str) -> str | None:
+    """Dekrip lalu re-enkrip (untuk perpanjang masa aktif cookie)."""
+    data = decrypt_payload(token, secret)
+    if not data:
+        return None
+    # Rebuild session supaya cookies fresh
+    sess = session_from_payload(data)
+    return encrypt_payload(data["s"], data.get("n", ""), sess, secret)
 
 
 # --------------------------------------------------------------------------- #
@@ -93,7 +111,7 @@ def decrypt_session(token, secret, timeout=10):
 # --------------------------------------------------------------------------- #
 def login(nim, password, timeout=10):
     """Login ke Sikuli. Mengembalikan (session, ok, message)."""
-    s = new_session(timeout=timeout)
+    s = new_session()
     payload = {"nim": nim.strip(), "password": password.strip(), "remember": "1"}
     try:
         resp = s.post(LOGIN_URL, data=payload, allow_redirects=True, timeout=timeout)
@@ -203,7 +221,7 @@ def parse_schedule(html_content):
 
 def check_and_do_attendance(session, courses):
     """Buka link absen yang terbuka & submit form kehadiran.
-    Mengembalikan list log string untuk siklus ini."""
+    Mengembalikan list log dicts untuk siklus ini."""
     logs = []
     now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     for c in courses:

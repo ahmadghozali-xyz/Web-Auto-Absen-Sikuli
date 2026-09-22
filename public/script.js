@@ -1,51 +1,48 @@
 /* ============================================================
-   Auto Absensi Sikuli UMRI — frontend (Vercel/serverless)
-   Polling 30 detik dipindah ke sisi browser: setInterval ->
-   POST /api/check. Cookie sesi HttpOnly otomatis dikirim browser.
+   Auto Absen Sikuli — Frontend JS
+   - Polling /api/status tiap 2.5 detik (ringan)
+   - Start / Stop / Refresh bot
+   - Theme toggle (light/dark) + localStorage
    ============================================================ */
 
 const $ = (s) => document.querySelector(s);
 
-// ---- Elements ----
-const loginScreen = $("#loginScreen");
-const dashboard = $("#dashboard");
-const logoutBtn = $("#logoutBtn");
-const connPill = $("#connPill");
-
-const loginForm = $("#loginForm");
-const nimInput = $("#nim");
-const pwdInput = $("#password");
-const intervalInput = $("#interval");
-const timeoutInput = $("#timeout");
-const loginBtn = $("#loginBtn");
-const loginAlert = $("#loginAlert");
-const togglePwd = $("#togglePwd");
+const loginScreen  = $("#loginScreen");
+const dashboard    = $("#dashboard");
+const logoutBtn    = $("#logoutBtn");
+const loginForm    = $("#loginForm");
+const nimInput     = $("#nim");
+const pwdInput     = $("#password");
+const loginBtn     = $("#loginBtn");
+const loginAlert   = $("#loginAlert");
+const togglePwd    = $("#togglePwd");
 
 const pName = $("#pName"), pNim = $("#pNim"), pSemester = $("#pSemester");
-const mInterval = $("#mInterval"), mLoop = $("#mLoop"), mLast = $("#mLast"), mCourse = $("#mCourse");
+const mLoop = $("#mLoop"), mCourse = $("#mCourse"), mLast = $("#mLast");
 const courseCount = $("#courseCount");
 const scheduleList = $("#scheduleList");
 
 const startBtn = $("#startBtn"), stopBtn = $("#stopBtn"), refreshBtn = $("#refreshBtn");
-const heroDot = $("#heroDot"), heroStatusText = $("#heroStatusText");
+const heroStatusPill = $("#heroStatusPill"), heroStatusText = $("#heroStatusText");
 const consoleEl = $("#console");
 const autoscroll = $("#autoscroll");
 const clearLog = $("#clearLog");
 
-let pollTimer = null;
-let loopCount = 0;
-let storedNim = "";
+const themeToggle = $("#themeToggle");
+const iconSun = $("#iconSun"), iconMoon = $("#iconMoon");
 
-// ----------------------------------------------------------- //
+// ---- state ----
+let pollTimer = null;
+let lastLogCount = 0;
+let lastState = null;
+
+// ============================================================ //
 // UTIL
-// ----------------------------------------------------------- //
-function setPill(state, text) {
-  connPill.className = "pill " + state;
-  // pertahankan ikon
-  const svg = connPill.querySelector("svg");
-  connPill.textContent = " " + text;
-  if (svg) connPill.insertBefore(svg, connPill.firstChild);
+// ============================================================ //
+function escapeHtml(s) {
+  return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
+
 function showAlert(type, msg) {
   loginAlert.hidden = false;
   loginAlert.className = "alert alert-" + type;
@@ -59,20 +56,49 @@ function setLoading(loading, label) {
   if (sp) sp.hidden = !loading;
   loginBtn.disabled = loading;
 }
-function escapeHtml(s) {
-  return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-}
 
 async function api(path, opts = {}) {
-  const res = await fetch(path, { headers: { "Content-Type": "application/json" }, ...opts });
-  let data = {};
-  try { data = await res.json(); } catch (_) {}
-  return { ok: res.ok, data };
+  try {
+    const res = await fetch(path, {
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      ...opts,
+    });
+    let data = {};
+    try { data = await res.json(); } catch (_) {}
+    return { ok: res.ok, status: res.status, data };
+  } catch (e) {
+    return { ok: false, status: 0, data: { message: "Tidak terhubung ke server" } };
+  }
 }
 
-// ----------------------------------------------------------- //
+// ============================================================ //
+// THEME TOGGLE
+// ============================================================ //
+function applyTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme);
+  const isDark = theme === "dark";
+  iconSun.hidden = isDark;
+  iconMoon.hidden = !isDark;
+  localStorage.setItem("absen-theme", theme);
+}
+
+function initTheme() {
+  const saved = localStorage.getItem("absen-theme");
+  const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)").matches;
+  applyTheme(saved || (prefersDark ? "dark" : "light"));
+}
+
+themeToggle.addEventListener("click", () => {
+  const cur = document.documentElement.getAttribute("data-theme") || "light";
+  applyTheme(cur === "dark" ? "light" : "dark");
+});
+
+initTheme();
+
+// ============================================================ //
 // LOGIN
-// ----------------------------------------------------------- //
+// ============================================================ //
 togglePwd.addEventListener("click", () => {
   const show = pwdInput.type === "password";
   pwdInput.type = show ? "text" : "password";
@@ -84,127 +110,135 @@ togglePwd.addEventListener("click", () => {
 loginForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   clearAlert();
-  setLoading(true, "Memproses...");
-  setPill("pill-warn", "Login...");
+  setLoading(true, "Login...");
+  showAlert("info", "Sedang login ke portal Sikuli...");
 
-  storedNim = nimInput.value.trim();
   const payload = {
-    nim: storedNim,
+    nim: nimInput.value.trim(),
     password: pwdInput.value.trim(),
-    timeout: timeoutInput.value || 10,
   };
 
   const { ok, data } = await api("/api/login", {
-    method: "POST", body: JSON.stringify(payload),
+    method: "POST",
+    body: JSON.stringify(payload),
   });
 
-  setLoading(false, "Masuk & Ambil Jadwal");
+  setLoading(false, "Masuk & Mulai Absen");
+
   if (!ok) {
-    setPill("pill-err", "Gagal");
     showAlert("error", data.message || "Login gagal");
     return;
   }
-  setPill("pill-ok", "Tersambung");
-  showAlert("success", data.message || "Login berhasil!");
-  setTimeout(clearAlert, 1800);
-  enterDashboard(data.status, payload.timeout, intervalInput.value || 30);
+
+  showAlert("success", "Login berhasil! Bot siap dijalankan.");
+  setTimeout(clearAlert, 1500);
+  enterDashboard(data.state);
 });
 
-function enterDashboard(status, timeout, interval) {
+function enterDashboard(state) {
   loginScreen.hidden = true;
   dashboard.hidden = false;
   logoutBtn.hidden = false;
   consoleEl.innerHTML = "";
-  mInterval.textContent = interval + "s";
-  renderStatus(status);
-  renderLogs({ logs: status.logs || [] });
+  lastLogCount = 0;
+  lastState = state;
+  renderState(state);
 }
 
 function leaveDashboard() {
-  stopBot();
+  stopPolling();
   loginScreen.hidden = false;
   dashboard.hidden = true;
   logoutBtn.hidden = true;
-  setPill("pill-neutral", "Silakan login");
+  lastState = null;
+  nimInput.value = "";
   pwdInput.value = "";
-  loopCount = 0;
-  loginForm.scrollIntoView({ behavior: "smooth" });
 }
 
-// ----------------------------------------------------------- //
+// ============================================================ //
 // LOGOUT
-// ----------------------------------------------------------- //
+// ============================================================ //
 logoutBtn.addEventListener("click", async () => {
   await api("/api/logout", { method: "POST" });
   leaveDashboard();
 });
 
-// ----------------------------------------------------------- //
-// BOT CONTROL (client-side polling)
-// ----------------------------------------------------------- //
-startBtn.addEventListener("click", startBot);
-stopBtn.addEventListener("click", stopBot);
-refreshBtn.addEventListener("click", manualCheck);
-clearLog.addEventListener("click", () => {
-  consoleEl.innerHTML = '<div class="console-line placeholder">Log dibersihkan.</div>';
+// ============================================================ //
+// BOT CONTROL
+// ============================================================ //
+startBtn.addEventListener("click", async () => {
+  const { ok, data } = await api("/api/start", { method: "POST" });
+  if (!ok) {
+    showAlert("error", data.message || "Gagal mulai bot");
+    return;
+  }
+  renderState(data.state);
 });
 
-function startBot() {
-  const interval = (parseInt(intervalInput.value, 10) || 30) * 1000;
-  startBtn.disabled = true;
-  stopBtn.disabled = false;
-  heroDot.className = "status-dot running";
-  heroStatusText.textContent = "Bot berjalan — mengecek tiap " + (interval/1000) + "s";
-  setPill("pill-ok", "Bot berjalan");
-  pushLog("INFO", "Bot Absen Aktif! Menunggu sesi absen terbuka...");
-  // langsung sekali, lalu interval
-  manualCheck();
-  pollTimer = setInterval(manualCheck, interval);
+stopBtn.addEventListener("click", async () => {
+  const { ok, data } = await api("/api/stop", { method: "POST" });
+  if (ok) renderState(data.state);
+});
+
+refreshBtn.addEventListener("click", async () => {
+  await api("/api/refresh", { method: "POST" });
+});
+
+clearLog.addEventListener("click", () => {
+  consoleEl.innerHTML = '<div class="console-line placeholder">Log dibersihkan.</div>';
+  lastLogCount = 0;
+});
+
+// ============================================================ //
+// POLLING STATUS (tiap 2.5 detik)
+// ============================================================ //
+function startPolling() {
+  if (pollTimer) return;
+  pollStatus(); // immediate
+  pollTimer = setInterval(pollStatus, 2500);
 }
 
-function stopBot() {
+function stopPolling() {
   if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
-  startBtn.disabled = false;
-  stopBtn.disabled = true;
-  heroDot.className = "status-dot stopped";
-  heroStatusText.textContent = "Bot dihentikan";
-  setPill("pill-neutral", "Berhenti");
-  pushLog("WARN", "Bot dihentikan oleh pengguna.");
 }
 
-async function manualCheck() {
-  const { ok, data } = await api("/api/check", {
-    method: "POST", body: JSON.stringify({ nim: storedNim }),
-  });
+async function pollStatus() {
+  const { ok, data } = await api("/api/status");
   if (!ok) {
-    if (data && data.status && data.status.logged_in === false) {
-      setPill("pill-err", "Sesi habis");
-      pushLog("ERROR", data.message || "Sesi habis, login ulang.");
+    if (data && data.logged_in === false) {
+      // session expired
       leaveDashboard();
-    } else {
-      pushLog("ERROR", data.message || "Gagal saat cek.");
+      showAlert("error", data.message || "Sesi habis, silakan login ulang.");
     }
     return;
   }
-  loopCount += 1;
-  renderStatus(data.status);
-  renderLogs(data.status);
+  if (data && data.state) {
+    lastState = data.state;
+    renderState(data.state);
+  }
 }
 
-// ----------------------------------------------------------- //
+// ============================================================ //
 // RENDER
-// ----------------------------------------------------------- //
-function renderStatus(st) {
+// ============================================================ //
+function renderState(st) {
+  if (!st) return;
+  // Student
   const s = st.student || {};
-  pName.textContent = s.nama && s.nama !== "N/A" ? s.nama : "Mahasiswa";
+  pName.textContent = (s.nama && s.nama !== "N/A") ? s.nama : "Mahasiswa";
   pNim.textContent = s.nim || "—";
   pSemester.textContent = s.semester || "—";
 
+  // Stats
+  mLoop.textContent = st.loop_count || 0;
   const courses = st.courses || [];
   mCourse.textContent = courses.length;
   courseCount.textContent = courses.length + " MK";
+  mLast.textContent = st.last_check ? "cek " + st.last_check : "—";
+
+  // Schedule
   if (courses.length === 0) {
-    scheduleList.innerHTML = '<div class="empty">Belum ada jadwal terdeteksi. Klik "Refresh".</div>';
+    scheduleList.innerHTML = '<div class="empty">Belum ada jadwal. Klik "Refresh" untuk memuat ulang.</div>';
   } else {
     scheduleList.innerHTML = courses.map((c, i) => `
       <div class="course ${c.absen_link ? "has-link" : ""}">
@@ -212,61 +246,76 @@ function renderStatus(st) {
           <span class="mk-name">${escapeHtml(c.mk)}</span>
           <span class="mk-idx">#${i + 1}</span>
         </div>
-        ${c.ruangan ? row("Ruangan", c.ruangan) : ""}
-        ${c.detail ? row("Waktu", c.detail) : ""}
-        ${c.dosen ? row("Dosen", c.dosen) : ""}
+        ${c.ruangan ? `<div class="mk-row"><b>Ruangan</b> <span>${escapeHtml(c.ruangan)}</span></div>` : ""}
+        ${c.detail  ? `<div class="mk-row"><b>Waktu</b> <span>${escapeHtml(c.detail)}</span></div>` : ""}
+        ${c.dosen   ? `<div class="mk-row"><b>Dosen</b> <span>${escapeHtml(c.dosen)}</span></div>` : ""}
         ${c.absen_link
-          ? '<span class="link-tag open"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Sesi absen terbuka</span>'
+          ? '<span class="link-tag open"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Sesi terbuka</span>'
           : '<span class="link-tag wait">menunggu sesi</span>'}
-      </div>`).join("");
+      </div>
+    `).join("");
   }
 
-  mLoop.textContent = loopCount;
-  const now = new Date().toLocaleTimeString("id-ID");
-  mLast.textContent = "cek terakhir " + now;
-}
-
-function row(label, val) {
-  return `<div class="mk-row"><b>${label}</b> <span>${escapeHtml(val)}</span></div>`;
-}
-
-function renderLogs(st) {
-  const logs = (st && st.logs) || [];
-  if (logs.length) {
-    const ph = consoleEl.querySelector(".placeholder");
-    if (ph) ph.remove();
-    const frag = document.createDocumentFragment();
-    for (const log of logs) {
-      const line = document.createElement("div");
-      line.className = "console-line";
-      line.innerHTML =
-        `<span class="ts">[${log.time}]</span> ` +
-        `<span class="lvl lvl-${log.level}">[${log.level}]</span> ` +
-        escapeHtml(log.message);
-      frag.appendChild(line);
-    }
-    consoleEl.appendChild(frag);
-    if (autoscroll.checked) consoleEl.scrollTop = consoleEl.scrollHeight;
-  }
-}
-
-function pushLog(level, message) {
-  renderLogs({ logs: [{ time: new Date().toLocaleString("id-ID"), level, message }] });
-}
-
-// ----------------------------------------------------------- //
-// INIT
-// ----------------------------------------------------------- //
-(async function init() {
-  setPill("pill-neutral", "Memeriksa sesi...");
-  const { ok, data } = await api("/api/login"); // GET -> cek cookie
-  if (ok && data.status && data.status.logged_in) {
-    // punya sesi lama -> ambil jadwal sekali
-    const r = await api("/api/check", { method: "POST", body: JSON.stringify({ nim: "" }) });
-    enterDashboard(r.data ? r.data.status : {}, timeoutInput.value, intervalInput.value);
-    loopCount = 0;
-    mLoop.textContent = 0;
+  // Hero status
+  if (st.running) {
+    heroStatusPill.className = "pill pill-ok";
+    heroStatusPill.querySelector(".pill-dot").style.background = "#FFFBF1";
+    heroStatusText.textContent = "Bot berjalan";
+    startBtn.disabled = true;
+    stopBtn.disabled = false;
   } else {
-    setPill("pill-neutral", "Silakan login");
+    heroStatusPill.className = "pill pill-warn";
+    heroStatusPill.querySelector(".pill-dot").style.background = "var(--mustard)";
+    heroStatusText.textContent = "Belum dimulai";
+    startBtn.disabled = false;
+    stopBtn.disabled = true;
+  }
+
+  // Logs (append only new ones)
+  renderLogs(st.logs || []);
+}
+
+function renderLogs(logs) {
+  if (!logs || !logs.length) return;
+  // Detect reset (mis. setelah logout)
+  if (logs.length < lastLogCount - 5) {
+    consoleEl.innerHTML = "";
+    lastLogCount = 0;
+  }
+  // Append only new
+  const newLogs = logs.slice(lastLogCount);
+  if (newLogs.length === 0) return;
+
+  const ph = consoleEl.querySelector(".placeholder");
+  if (ph) ph.remove();
+
+  const frag = document.createDocumentFragment();
+  for (const log of newLogs) {
+    const line = document.createElement("div");
+    line.className = "console-line";
+    line.innerHTML =
+      `<span class="ts">[${escapeHtml(log.time)}]</span> ` +
+      `<span class="lvl lvl-${escapeHtml(log.level)}">[${escapeHtml(log.level)}]</span> ` +
+      escapeHtml(log.message);
+    frag.appendChild(line);
+  }
+  consoleEl.appendChild(frag);
+  lastLogCount = logs.length;
+
+  if (autoscroll.checked) {
+    consoleEl.scrollTop = consoleEl.scrollHeight;
+  }
+}
+
+// ============================================================ //
+// INIT — cek apakah masih ada sesi
+// ============================================================ //
+(async function init() {
+  const { ok, data } = await api("/api/status");
+  if (ok && data && data.logged_in && data.state) {
+    enterDashboard(data.state);
+    startPolling();
+  } else {
+    // show login screen (default visible)
   }
 })();
